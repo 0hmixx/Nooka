@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="description" content="Mobile-first web app — Home | Calendar | Finance | More">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Nooka">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+  <link rel="shortcut icon" href="icons/favicon.ico">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet">
+  <title>Nooka</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-mark"><img src="icons/icon-192.png" alt="" width="32" height="32"></div>
+          <span class="brand-name">Nooka</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <button class="icon-btn" id="btn-notif" aria-label="Notifications">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          </button>
+          <button class="icon-btn" id="btn-install" hidden aria-label="Install app">Install</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <!-- HOME — Dashboard v2 -->
+      <section class="page active" id="page-home">
+        <div class="hero">
+          <h1 id="home-greeting">Good morning 👋</h1>
+          <p class="muted" id="home-subtitle" style="margin-top:4px">—</p>
+          <p class="small muted" id="home-date" style="margin-top:2px">—</p>
+        </div>
+
+        <!-- Live Stats -->
+        <div class="lifespace-grid" style="margin-top:12px">
+          <button class="ls-tile" onclick="setPage('lifespace'); setTimeout(()=>openLsDetail('calendar'),80)">
+            <div class="ls-tile-icon">📅</div>
+            <div class="ls-tile-title">Today</div>
+            <div class="ls-tile-sub" id="home-stat-today">—</div>
+          </button>
+          <button class="ls-tile" onclick="setPage('lifespace'); setTimeout(()=>openLsDetail('tasks'),80)">
+            <div class="ls-tile-icon">✅</div>
+            <div class="ls-tile-title">Tasks</div>
+            <div class="ls-tile-sub" id="home-stat-tasks">—</div>
+          </button>
+          <button class="ls-tile" onclick="setPage('finance')">
+            <div class="ls-tile-icon">💰</div>
+            <div class="ls-tile-title">Finance</div>
+            <div class="ls-tile-sub" id="home-stat-finance">—</div>
+          </button>
+          <button class="ls-tile" onclick="setPage('lifespace'); setTimeout(()=>openLsDetail('projects'),80)">
+            <div class="ls-tile-icon">📁</div>
+            <div class="ls-tile-title">LifeSpace</div>
+            <div class="ls-tile-sub" id="home-stat-lifespace">—</div>
+          </button>
+        </div>
+
+        <!-- Today's Focus -->
+        <div class="card" style="margin-top:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <h3>Today's Focus <span class="muted small" id="home-focus-count"></span></h3>
+            <button class="btn btn-ghost" style="min-height:32px;padding:0 10px;font-size:12px" onclick="setPage('lifespace')">Open</button>
+          </div>
+          <div id="home-focus" class="list" style="margin-top:10px"></div>
+        </div>
+
+        <!-- Savings Progress -->
+        <div class="card" style="margin-top:12px" id="home-savings-card" hidden>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <h3>Savings</h3>
+            <span class="muted small" id="home-savings-total">—</span>
+          </div>
+          <div id="home-savings-list" style="margin-top:10px;display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+
+        <!-- Recent -->
+        <div class="card" style="margin-top:12px">
+          <h3>Recent</h3>
+          <div id="home-recent" class="list" style="margin-top:10px"></div>
+        </div>
+      </section>
+
+      <!-- LIFESPACE — Grid: Calendar | Event / Note | Job / Projects -->
+      <section class="page" id="page-lifespace">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <div>
+            <h2>LifeSpace</h2>
+            <p class="muted" id="ls-view-hint">Tap a tile to open — grid overview.</p>
+          </div>
+          <div class="view-toggle" role="group" aria-label="View toggle">
+            <button class="view-btn active" id="ls-view-grid" aria-label="Grid view" aria-pressed="true">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="1" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.4"/><rect x="1" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="9" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.4"/></svg>
+            </button>
+            <button class="view-btn" id="ls-view-list" aria-label="List view" aria-pressed="false">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="2.5" width="13" height="3" rx="1.5" stroke="currentColor" stroke-width="1.4"/><rect x="1.5" y="6.5" width="13" height="3" rx="1.5" stroke="currentColor" stroke-width="1.4"/><rect x="1.5" y="10.5" width="13" height="3" rx="1.5" stroke="currentColor" stroke-width="1.4"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="lifespace-grid" id="ls-grid">
+          <!-- Calendar Tile -->
+          <button class="ls-tile" data-ls="calendar" aria-label="Open calendar">
+            <div class="ls-tile-icon">📅</div>
+            <div class="ls-tile-title">Calendar</div>
+            <div class="ls-tile-sub" id="ls-tile-cal-sub">—</div>
+          </button>
+          <!-- Event Tile -->
+          <button class="ls-tile" data-ls="events" aria-label="Open events">
+            <div class="ls-tile-icon">📌</div>
+            <div class="ls-tile-title">Events</div>
+            <div class="ls-tile-sub" id="ls-tile-events-sub">—</div>
+          </button>
+          <!-- Note Tile -->
+          <button class="ls-tile" data-ls="notes" aria-label="Open notes">
+            <div class="ls-tile-icon">📝</div>
+            <div class="ls-tile-title">Notes</div>
+            <div class="ls-tile-sub" id="ls-tile-notes-sub">—</div>
+          </button>
+          <!-- Job Tile -->
+          <button class="ls-tile" data-ls="jobs" aria-label="Open job applications">
+            <div class="ls-tile-icon">💼</div>
+            <div class="ls-tile-title">Jobs</div>
+            <div class="ls-tile-sub" id="ls-tile-jobs-sub">—</div>
+          </button>
+          <!-- Project Tile -->
+          <button class="ls-tile" data-ls="projects" aria-label="Open projects">
+            <div class="ls-tile-icon">📁</div>
+            <div class="ls-tile-title">Projects</div>
+            <div class="ls-tile-sub" id="ls-tile-projects-sub">—</div>
+          </button>
+          <!-- Task Tile -->
+          <button class="ls-tile" data-ls="tasks" aria-label="Open tasks">
+            <div class="ls-tile-icon">✅</div>
+            <div class="ls-tile-title">Tasks</div>
+            <div class="ls-tile-sub" id="ls-tile-tasks-sub">—</div>
+          </button>
+          <!-- Goal Tile -->
+          <button class="ls-tile" data-ls="goals" aria-label="Open goals" style="grid-column: span 2">
+            <div class="ls-tile-icon">🎯</div>
+            <div class="ls-tile-title">Goals</div>
+            <div class="ls-tile-sub" id="ls-tile-goals-sub">—</div>
+          </button>
+        </div>
+
+        <!-- List View (hidden by default) -->
+        <div class="ls-list" id="ls-list" hidden>
+          <button class="ls-list-item" data-ls="calendar"><span class="ls-list-icon">📅</span><span><div class="ls-list-title">Calendar</div><div class="ls-list-sub" id="ls-list-cal-sub">—</div></span><span style="margin-left:auto">›</span></button>
+          <button class="ls-list-item" data-ls="events"><span class="ls-list-icon">📌</span><span><div class="ls-list-title">Events</div><div class="ls-list-sub" id="ls-list-events-sub">—</div></span><span style="margin-left:auto">›</span></button>
+          <button class="ls-list-item" data-ls="notes"><span class="ls-list-icon">📝</span><span><div class="ls-list-title">Notes</div><div class="ls-list-sub" id="ls-list-notes-sub">—</div></span><span style="margin-left:auto">›</span></button>
+          <button class="ls-list-item" data-ls="jobs"><span class="ls-list-icon">💼</span><span><div class="ls-list-title">Jobs</div><div class="ls-list-sub" id="ls-list-jobs-sub">—</div></span><span style="margin-left:auto">›</span></button>
+          <button class="ls-list-item" data-ls="projects"><span class="ls-list-icon">📁</span><span><div class="ls-list-title">Projects</div><div class="ls-list-sub" id="ls-list-projects-sub">—</div></span><span style="margin-left:auto">›</span></button>
+          <button class="ls-list-item" data-ls="tasks"><span class="ls-list-icon">✅</span><span><div class="ls-list-title">Tasks</div><div class="ls-list-sub" id="ls-list-tasks-sub">—</div></span><span style="margin-left:auto">›</span></button>
+          <button class="ls-list-item" data-ls="goals"><span class="ls-list-icon">🎯</span><span><div class="ls-list-title">Goals</div><div class="ls-list-sub" id="ls-list-goals-sub">—</div></span><span style="margin-left:auto">›</span></button>
+        </div>
+
+        <!-- Hidden Detail Area — shown after tile/list tap -->
+        <div id="ls-detail" hidden>
+          <button class="btn btn-ghost" id="ls-back" onclick="closeLsDetail()" style="margin-top:12px">← Back</button>
+
+          <!-- Calendar Detail -->
+          <div class="card ls-detail-panel" id="ls-panel-calendar" hidden>
+            <div class="cal-header">
+              <button class="icon-btn" id="cal-prev" aria-label="Previous month">‹</button>
+              <div class="cal-title" id="cal-title">—</div>
+              <button class="icon-btn" id="cal-next" aria-label="Next month">›</button>
+            </div>
+            <div class="cal-grid cal-weekdays">
+              <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+            </div>
+            <div class="cal-grid" id="cal-grid"></div>
+          </div>
+
+          <!-- Events Detail -->
+          <div class="card ls-detail-panel" id="ls-panel-events" hidden>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <h3 id="cal-selected-label">Today</h3>
+              <button class="btn btn-ghost" style="min-height:36px" id="cal-add-btn">+ Event</button>
+            </div>
+            <div id="cal-events" class="list" style="margin-top:10px"></div>
+          </div>
+
+          <!-- Notes Detail -->
+          <div class="card ls-detail-panel" id="ls-panel-notes" hidden>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+              <h3>Notes <span class="muted small" id="ls-notes-count"></span></h3>
+              <button class="btn btn-ghost" style="min-height:36px" onclick="openAddNote()">+ Note</button>
+            </div>
+            <div class="searchbar" style="margin-top:8px;height:40px">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 10.5L13 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              <input id="ls-notes-search" type="search" placeholder="Search notes...">
+            </div>
+            <div id="ls-notes-list" class="list" style="margin-top:10px"></div>
+          </div>
+
+          <!-- Jobs Detail -->
+          <div class="card ls-detail-panel" id="ls-panel-jobs" hidden>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+              <h3>Jobs <span class="muted small" id="ls-apps-count"></span></h3>
+              <button class="btn btn-ghost" style="min-height:36px" onclick="openAddApplication()">+ Job</button>
+            </div>
+            <div class="searchbar" style="margin-top:8px;height:40px">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 10.5L13 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              <input id="ls-apps-search" type="search" placeholder="Search jobs...">
+            </div>
+            <div id="ls-apps-list" class="list" style="margin-top:10px"></div>
+          </div>
+
+          <!-- Projects Detail -->
+          <div class="card ls-detail-panel" id="ls-panel-projects" hidden>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+              <h3>Projects <span class="muted small" id="ls-projects-count"></span></h3>
+              <button class="btn btn-ghost" style="min-height:36px" onclick="openAddProject()">+ Project</button>
+            </div>
+            <div class="searchbar" style="margin-top:8px;height:40px">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 10.5L13 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              <input id="ls-projects-search" type="search" placeholder="Search projects...">
+            </div>
+            <div id="ls-projects-list" class="list" style="margin-top:10px"></div>
+          </div>
+
+          <!-- Tasks Detail -->
+          <div class="card ls-detail-panel" id="ls-panel-tasks" hidden>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+              <h3>Tasks <span class="muted small" id="ls-tasks-count"></span></h3>
+              <button class="btn btn-ghost" style="min-height:36px" onclick="openAddTask()">+ Task</button>
+            </div>
+            <div class="searchbar" style="margin-top:8px;height:40px">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 10.5L13 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              <input id="ls-tasks-search" type="search" placeholder="Search tasks...">
+            </div>
+            <div id="ls-tasks-list" class="list" style="margin-top:10px"></div>
+          </div>
+
+          <!-- Goals Detail -->
+          <div class="card ls-detail-panel" id="ls-panel-goals" hidden>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+              <h3>Goals <span class="muted small" id="ls-goals-count"></span></h3>
+              <button class="btn btn-ghost" style="min-height:36px" onclick="openAddGoal()">+ Goal</button>
+            </div>
+            <div class="searchbar" style="margin-top:8px;height:40px">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 10.5L13 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+              <input id="ls-goals-search" type="search" placeholder="Search goals...">
+            </div>
+            <div id="ls-goals-list" class="list" style="margin-top:10px"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FINANCE -->
+      <section class="page" id="page-finance">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+          <div>
+            <h2>Finance</h2>
+            <p class="muted">Track income & expenses — stored locally.</p>
+          </div>
+          <button class="icon-btn" id="fin-add-btn" aria-label="Add transaction" style="min-width:44px">+</button>
+        </div>
+        <div class="finance-summary">
+          <div class="card" style="text-align:center">
+            <div class="muted small">Income</div>
+            <div class="finance-amount income" id="fin-income">₱0.00</div>
+          </div>
+          <div class="card" style="text-align:center">
+            <div class="muted small">Expenses</div>
+            <div class="finance-amount expense" id="fin-expense">₱0.00</div>
+          </div>
+          <div class="card" style="text-align:center;border-color:var(--accent)">
+            <div class="muted small">Balance</div>
+            <div class="finance-amount" id="fin-balance">₱0.00</div>
+          </div>
+        </div>
+        <!-- Savings Accounts — Collapsible -->
+        <div class="card" id="savings-card" style="margin-top:12px">
+          <button class="savings-header" id="savings-toggle" aria-expanded="true" aria-controls="savings-body" style="width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px;background:none;border:0;padding:0;cursor:pointer;text-align:left">
+            <span style="display:flex;align-items:center;gap:8px"><h3 style="margin:0">Savings Accounts</h3><span class="savings-chevron" id="savings-chevron">▾</span></span>
+            <span class="muted small" id="savings-total" style="white-space:nowrap">—</span>
+          </button>
+          <div id="savings-body">
+            <div style="display:flex;justify-content:flex-end;margin-top:10px">
+              <button class="btn btn-primary" id="btn-add-account" style="min-height:36px;padding:0 12px">+ Account</button>
+            </div>
+            <div id="accounts-list" class="list" style="margin-top:10px"></div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn btn-primary" id="fin-add-income" style="flex:1">+ Income</button>
+          <button class="btn btn-ghost" id="fin-add-expense" style="flex:1">+ Expense</button>
+        </div>
+        <div class="searchbar" style="margin-top:12px">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.4"/><path d="M10.5 10.5L13 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          <input id="fin-search" type="search" placeholder="Search transactions...">
+        </div>
+        <div id="fin-list" class="list" style="margin-top:10px"></div>
+      </section>
+
+      <!-- MORE — Profile + Settings -->
+      <section class="page" id="page-more">
+        <h2>More</h2>
+        <p class="muted">Personalize & settings.</p>
+
+        <div class="card" id="profile-card" style="margin-top:12px">
+          <button class="savings-header" id="profile-toggle" aria-expanded="true" aria-controls="profile-body" style="width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px;background:none;border:0;padding:0;cursor:pointer;text-align:left">
+            <span style="display:flex;align-items:center;gap:8px"><h3 style="margin:0">Profile</h3><span class="savings-chevron" id="profile-chevron">▾</span></span>
+            <span class="muted small" id="profile-summary">—</span>
+          </button>
+          <div id="profile-body" style="margin-top:10px">
+            <div class="profile-card" style="margin:8px 0 12px">
+              <div class="avatar" id="profile-avatar">JD</div>
+              <div>
+                <div class="profile-name" id="profile-name">Jane Doe</div>
+                <div class="muted small">How you'll be greeted</div>
+              </div>
+            </div>
+            <div class="field" style="margin-bottom:0">
+              <label for="profile-input">What should I call you?</label>
+              <div style="display:flex;gap:8px">
+                <input id="profile-input" type="text" placeholder="e.g. Jan" maxlength="24" autocomplete="nickname" style="flex:1">
+                <button class="btn btn-primary" id="profile-save" style="min-width:80px">Save</button>
+              </div>
+              <div class="muted small" style="margin-top:6px">Saved locally on this device.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="activity-card" style="margin-top:12px">
+          <button class="savings-header" id="activity-toggle" aria-expanded="true" aria-controls="activity-body" style="width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px;background:none;border:0;padding:0;cursor:pointer;text-align:left">
+            <span style="display:flex;align-items:center;gap:8px"><h3 style="margin:0">Activity Log</h3><span class="savings-chevron" id="activity-chevron">▾</span></span>
+            <span class="btn btn-ghost" style="min-height:32px;padding:0 10px;font-size:12px" id="btn-clear-log" onclick="event.stopPropagation(); clearActivityLog()">Clear</span>
+          </button>
+          <div id="activity-body" style="margin-top:10px">
+            <div id="activity-log" class="list" style="max-height:320px;overflow:auto"></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <h3>Backup & Export</h3>
+          <div class="list" style="margin-top:10px">
+            <button class="list-item" onclick="exportBackup()"><span>⤓</span> Export Backup (JSON)</button>
+            <button class="list-item" onclick="document.getElementById('import-file').click()"><span>⤒</span> Import Backup (JSON)</button>
+            <input type="file" id="import-file" accept=".json" hidden>
+            <button class="list-item" onclick="exportFinanceCSV()"><span>📊</span> Export Finance CSV</button>
+          </div>
+          <div class="small muted" style="margin-top:6px">Backup includes all tasks, notes, jobs, projects, events, finance & profile.</div>
+        </div>
+
+        <div class="list" style="margin-top:12px">
+          <label class="list-item" style="justify-content:space-between;cursor:pointer">
+            <span style="display:flex;align-items:center;gap:8px"><span id="theme-icon">🌙</span> <span id="theme-label">Night mode</span></span>
+            <span class="toggle"><input type="checkbox" id="theme-toggle" aria-label="Toggle dark mode"><span class="toggle-track"></span><span class="toggle-thumb"></span></span>
+          </label>
+          <button class="list-item" data-action="clear"><span>🗑️</span> Clear all data</button>
+          <button class="list-item" id="btn-install-more" hidden><span>📲</span> Install app</button>
+          <button class="list-item" onclick="openHelp()"><span>❓</span> Help & feedback</button>
+        </div>
+        <p class="muted small" style="margin-top:14px">Storage: <span id="storage-info">—</span></p>
+        <p class="muted small">Version 1.0 · PWA · offline-ready</p>
+      </section>
+    </main>
+
+    <!-- Bottom Navigation: Home | LifeSpace | Action Button | Finance | More -->
+    <nav class="bottom-nav" aria-label="Primary">
+      <button class="nav-btn active" data-nav="home" aria-current="page">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 10L12 4l8 6v8a1 1 0 01-1 1h-4v-4H9v4H5a1 1 0 01-1-1v-8z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></span>
+        <span class="nav-label">Home</span>
+      </button>
+      <button class="nav-btn" data-nav="lifespace">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M8 3l4 4 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 11h18" stroke="currentColor" stroke-width="1.2"/></svg></span>
+        <span class="nav-label">LifeSpace</span>
+      </button>
+      <button class="nav-btn nav-btn-fab" id="fab-action" aria-label="Quick actions" aria-haspopup="dialog">
+        <span class="fab-icon">+</span>
+      </button>
+      <button class="nav-btn" data-nav="finance">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16v10H4z" stroke="currentColor" stroke-width="1.7" rx="1"/><path d="M12 11a2 2 0 100 4 2 2 0 000-4z" stroke="currentColor" stroke-width="1.5"/><path d="M4 11h3M17 13h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+        <span class="nav-label">Finance</span>
+      </button>
+      <button class="nav-btn" data-nav="more">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="12" cy="19" r="1.7" fill="currentColor"/></svg></span>
+        <span class="nav-label">More</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Action Sheet (center FAB) — Add Note / Add Task / Add Job Application -->
+  <div class="sheet-overlay" id="sheet-overlay" hidden onclick="closeSheet()"></div>
+  <div class="sheet" id="action-sheet" role="dialog" aria-modal="true" aria-label="Quick actions" hidden>
+    <div class="sheet-handle"></div>
+    <h3 style="padding:0 16px 8px">Quick Actions</h3>
+    <div class="sheet-grid" style="grid-template-columns:1fr 1fr 1fr">
+      <button class="sheet-btn" data-sheet="event">
+        <span class="sheet-icon">📅</span>
+        <span>Add Event</span>
+      </button>
+      <button class="sheet-btn" data-sheet="note">
+        <span class="sheet-icon">📝</span>
+        <span>Add Note</span>
+      </button>
+      <button class="sheet-btn" data-sheet="goal">
+        <span class="sheet-icon">🎯</span>
+        <span>Add Goal</span>
+      </button>
+      <button class="sheet-btn" data-sheet="task">
+        <span class="sheet-icon">✅</span>
+        <span>Add Task</span>
+      </button>
+      <button class="sheet-btn" data-sheet="application">
+        <span class="sheet-icon">💼</span>
+        <span>Add Job</span>
+      </button>
+      <button class="sheet-btn" data-sheet="project">
+        <span class="sheet-icon">📁</span>
+        <span>Add Project</span>
+      </button>
+    </div>
+    <p class="muted small" style="text-align:center;margin-top:8px;padding:0 16px">Finance has its own Add buttons inside the Finance tab.</p>
+     <button class="btn btn-ghost btn-block" id="sheet-close" onclick="closeSheet()" style="margin:12px 16px 0">Close</button>
+  </div>
+
+  <!-- Inline modal for forms -->
+  <div class="modal-overlay" id="modal-overlay" hidden onclick="closeModal()"></div>
+  <div class="modal" id="modal" hidden role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <h3 id="modal-title">—</h3>
+      <button class="icon-btn" id="modal-close" onclick="closeModal()" aria-label="Close">×</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+      navigator.serviceWorker.register('./sw.js').catch(console.warn);
+    }
+  </script>
+</body>
+</html>
